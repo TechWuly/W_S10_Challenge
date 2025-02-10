@@ -1,18 +1,63 @@
-import { configureStore } from '@reduxjs/toolkit'
+import { configureStore, createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
-const exampleReducer = (state = { count: 0 }) => {
-  return state
-}
+// API Endpoints
+const HISTORY_URL = 'http://localhost:9009/api/pizza/history';
+const ORDER_URL = 'http://localhost:9009/api/pizza/order';
 
-export const resetStore = () => configureStore({
-  reducer: {
-    example: exampleReducer,
-    // add your reducer(s) here
+// Async Thunks
+export const fetchOrders = createAsyncThunk('orders/fetchOrders', async () => {
+  const response = await axios.get(HISTORY_URL);
+  return response.data; // API returns an array of orders
+});
+
+export const placeOrder = createAsyncThunk(
+  'orders/placeOrder',
+  async (orderData, thunkAPI) => {
+    try {
+      const response = await axios.post(ORDER_URL, orderData);
+      return response.data.data; // API wraps the new order in 'data'
+    } catch (error) {
+      return thunkAPI.rejectWithValue(error.response.data);
+    }
+  }
+);
+
+// Order Slice
+const ordersSlice = createSlice({
+  name: 'orders',
+  initialState: {
+    orders: [],
+    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    error: null,
   },
-  middleware: getDefault => getDefault().concat(
-    // if using RTK Query for your networking: add your middleware here
-    // if using Redux Thunk for your networking: you can ignore this
-  ),
-})
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchOrders.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchOrders.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.orders = action.payload;
+      })
+      .addCase(fetchOrders.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(placeOrder.fulfilled, (state, action) => {
+        state.orders.push(action.payload); // Add new order to state
+      });
+  },
+});
 
-export const store = resetStore()
+// Store Configuration
+export const resetStore = () =>
+  configureStore({
+    reducer: {
+      orders: ordersSlice.reducer,
+    },
+    middleware: (getDefault) => getDefault().concat(),
+  });
+
+export const store = resetStore();
