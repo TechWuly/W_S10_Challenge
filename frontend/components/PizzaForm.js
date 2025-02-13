@@ -92,7 +92,7 @@ export default function PizzaForm() {
         {Object.entries(toppingsMap).map(([key, label]) => (
           <label key={key}>
             <input
-              data-testid={`check${label.replace(/\s/g, '')}`}
+              data-testid={`check${label.replace(/\s/g, '').toLowerCase()}`}
               name={key}
               type="checkbox"
               checked={formState[key]}
