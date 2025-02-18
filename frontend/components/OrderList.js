@@ -29,14 +29,18 @@ export default function OrderList() {
         {filteredOrders.map((order) => (
           <li key={order.id}>
             <div>
-              {order.customer} ordered a size {order.size} with {order.toppings.length} toppings
+              {order.customer} ordered a size {order.size} with {order.toppings && order.toppings.length > 0 ? (
+                  `${order.toppings.length} toppings`
+                    ) : (
+                     'no toppings'
+              )}
             </div>
           </li>
         ))}
       </ol>
 
       <div id="sizeFilters">
-        Filter by size:
+        Filter by size: 
         {['All', 'S', 'M', 'L'].map((size) => (
           <button
             data-testid={`filterBtn${size}`}
@@ -54,7 +58,6 @@ export default function OrderList() {
           .button-filter {
             background-color: white;
             border: 1px solid #ccc;
-            padding: 5px 10px;
             margin: 5px;
             cursor: pointer;
           }
